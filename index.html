@@ -11,110 +11,131 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;900&family=Noto+Nastaliq+Urdu&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Noto+Nastaliq+Urdu&display=swap');
         
-        :root { --primary: #059669; }
-        body { font-family: 'Outfit', sans-serif; transition: 0.3s; }
+        :root { --primary: #059669; --dark-bg: #0f172a; }
+        body { font-family: 'Outfit', sans-serif; transition: 0.3s; overflow-x: hidden; }
         .urdu { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.2; }
         
-        /* Dark Mode Styles */
-        body.dark { background-color: #0f172a; color: white; }
-        .dark .bg-white { background-color: #1e293b; color: white; }
-        .dark .text-slate-800 { color: #f1f5f9; }
-        .dark textarea { background-color: #334155; color: white; border: 1px solid #475569; }
+        /* Dark Mode Fixes */
+        body.dark { background-color: var(--dark-bg); color: white; }
+        .dark .bg-white { background-color: #1e293b; color: white; border: 1px solid #334155; }
+        .dark textarea { background-color: #0f172a; color: #f1f5f9; border: 1px solid #475569; }
         .dark #sidebar { background-color: #1e293b; color: white; }
-        .dark .service-pill { background-color: #334155; color: #cbd5e1; border-color: #475569; }
+        .dark .text-slate-800, .dark h2 { color: #f1f5f9; }
 
-        /* Splash */
+        /* Advanced Splash Animation */
         #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 9999; transition: 0.8s;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; transition: 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .splash-box { text-align: center; animation: fadeIn 1.5s ease-out; }
+        @keyframes fadeIn { 
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .line-glow { height: 3px; width: 0; background: #fbbf24; margin: 15px auto; animation: grow 1s 0.5s forwards; border-radius: 50px; }
+        @keyframes grow { to { width: 150px; } }
 
         /* Sidebar */
         #sidebar {
-            position: fixed; top: 0; right: -100%; width: 300px; height: 100%;
-            background: white; z-index: 2000; transition: 0.5s; padding: 25px; box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+            position: fixed; top: 0; right: -100%; width: 320px; height: 100%;
+            background: white; z-index: 2000; transition: 0.5s; padding: 25px; box-shadow: -15px 0 40px rgba(0,0,0,0.3);
+            overflow-y: auto;
         }
         #sidebar.active { right: 0; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; z-index: 1500; backdrop-filter: blur(5px); }
 
-        #map { height: 320px; width: 100%; border-radius: 25px; border: 3px solid var(--primary); z-index: 1; }
-        .service-pill { background: #f1f5f9; padding: 10px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; font-size: 13px; }
+        /* Map & UI */
+        #map { height: 320px; width: 100%; border-radius: 30px; border: 4px solid var(--primary); z-index: 1; box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .btn-phase { transition: 0.3s; font-weight: 900; }
+        .service-tag { background: #f1f5f9; padding: 12px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; font-weight: 600; font-size: 14px; }
+        .dark .service-tag { background: #334155; color: #cbd5e1; }
     </style>
 </head>
-<body class="bg-slate-50" onload="initApp()">
+<body class="bg-slate-100" onload="initApp()">
 
     <div id="splash">
-        <div class="text-center text-white scale-110 transition">
-            <h1 class="text-7xl font-black italic">POR</h1>
-            <p class="tracking-[0.4em] font-bold text-emerald-300">RESIDENTIA</p>
+        <div class="splash-box">
+            <h1 class="text-7xl font-black text-white italic tracking-tighter leading-none">POR</h1>
+            <p class="text-2xl font-bold text-emerald-200 tracking-[0.3em] mt-2">DELIVERY</p>
+            <div class="line-glow"></div>
+            <p class="text-[12px] text-white/90 font-bold uppercase tracking-[0.1em] px-4">
+                PHA Officers Residentia<br>
+                Kuri Road, Islamabad
+            </p>
         </div>
     </div>
 
     <div id="sidebar">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="font-black text-xl italic text-emerald-600">POR HUB</h3>
-            <button onclick="toggleMenu()"><i class="fas fa-times text-xl"></i></button>
+        <div class="flex justify-between items-center mb-8">
+            <h3 class="font-black text-2xl italic text-emerald-600">POR HUB</h3>
+            <button onclick="toggleMenu()" class="text-gray-400 hover:text-black"><i class="fas fa-times text-2xl"></i></button>
         </div>
-        <section class="space-y-4">
-            <h4 class="text-[10px] font-black uppercase tracking-widest text-gray-400">Services List</h4>
-            <div class="service-pill"><i class="fas fa-shopping-cart mr-3"></i> Groceries</div>
-            <div class="service-pill"><i class="fas fa-faucet mr-3"></i> Plumber</div>
-            <div class="service-pill"><i class="fas fa-bolt mr-3"></i> Electrician</div>
-            <div class="service-pill"><i class="fas fa-car mr-3"></i> Rent a Car</div>
-            <hr class="opacity-10">
-            <div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl">
-                <p class="text-xs font-bold">Helpline</p>
-                <a href="tel:03325047836" class="text-emerald-600 font-black">03325047836</a>
+        <div class="space-y-6">
+            <section>
+                <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Available Services</h4>
+                <div class="service-tag"><i class="fas fa-shopping-basket mr-3 text-emerald-600"></i> Groceries Delivery</div>
+                <div class="service-tag"><i class="fas fa-faucet mr-3 text-emerald-600"></i> Plumber on Call</div>
+                <div class="service-tag"><i class="fas fa-bolt mr-3 text-emerald-600"></i> Electrician on Call</div>
+                <div class="service-tag"><i class="fas fa-paint-roller mr-3 text-emerald-600"></i> Home Painting</div>
+                <div class="service-tag"><i class="fas fa-car mr-3 text-emerald-600"></i> Rent a Car</div>
+            </section>
+            <div class="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-[2rem]">
+                <p class="text-xs font-bold text-emerald-800 dark:text-emerald-400 mb-1">Direct Help Line</p>
+                <a href="tel:03325047836" class="text-xl font-black text-emerald-700 dark:text-white">03325047836</a>
             </div>
-        </section>
+        </div>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
-    <nav class="fixed top-0 w-full p-5 flex justify-between items-center z-[1000]">
+    <nav class="fixed top-0 w-full p-6 flex justify-between items-center z-[1000]">
         <div class="flex gap-2">
-            <button onclick="toggleTheme()" class="bg-black/20 backdrop-blur-md w-10 h-10 rounded-xl text-white flex items-center justify-center">
-                <i class="fas fa-moon" id="themeIcon"></i>
+            <button onclick="toggleTheme()" class="bg-black/30 backdrop-blur-md w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg border border-white/10">
+                <i class="fas fa-moon text-lg" id="themeIcon"></i>
             </button>
-            <button onclick="toggleLang()" class="bg-black/20 backdrop-blur-md px-3 rounded-xl text-white text-[10px] font-bold" id="langBtn">URDU</button>
+            <button onclick="toggleLang()" class="bg-black/30 backdrop-blur-md px-4 rounded-2xl text-white text-[11px] font-black tracking-widest border border-white/10" id="langBtn">URDU</button>
         </div>
-        <button onclick="toggleMenu()" class="bg-emerald-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
-            <i class="fas fa-bars"></i>
+        <button onclick="toggleMenu()" class="bg-emerald-600 text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-[0_10px_20px_rgba(5,150,105,0.4)]">
+            <i class="fas fa-bars-staggered text-xl"></i>
         </button>
     </nav>
 
-    <header class="bg-emerald-950 text-white pt-24 pb-36 px-8 rounded-b-[3.5rem] text-center shadow-2xl">
-        <h1 class="text-4xl font-black italic" id="mainTitle">POR Delivery</h1>
-        <p class="text-[9px] opacity-60 tracking-[0.3em] font-bold mt-2 uppercase">PHA Officers Residentia</p>
+    <header class="bg-emerald-950 text-white pt-28 pb-44 px-8 rounded-b-[4.5rem] text-center shadow-inner overflow-hidden relative">
+        <div class="relative z-10">
+            <h1 class="text-5xl font-black italic tracking-tighter" id="mainTitle">POR Delivery</h1>
+            <p class="text-[13px] font-bold text-emerald-400 tracking-[0.2em] mt-3 uppercase" id="subAddress">PHA OFFICERS RESIDENTIA KURI ISLAMABAD</p>
+        </div>
+        <div class="absolute -bottom-20 -left-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"></div>
     </header>
 
-    <main class="max-w-md mx-auto px-6 -mt-24 relative z-20">
+    <main class="max-w-md mx-auto px-6 -mt-32 relative z-20 pb-10">
         
-        <div class="bg-white rounded-[2.5rem] p-4 shadow-xl mb-6 transition">
-            <div class="flex justify-between items-center mb-3 px-2">
-                <span id="distBadge" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">GPS Ready</span>
-                <button onclick="requestGPS()" class="text-emerald-500"><i class="fas fa-location-crosshairs"></i></button>
+        <div class="bg-white rounded-[2.5rem] p-5 shadow-2xl mb-8">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <span id="distBadge" class="bg-emerald-100 text-emerald-700 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-tighter">Locating Resident...</span>
+                <button onclick="requestGPS()" class="text-emerald-500 bg-emerald-50 w-10 h-10 rounded-full flex items-center justify-center shadow-sm"><i class="fas fa-location-crosshairs"></i></button>
             </div>
             <div id="map"></div>
+            <p class="text-[10px] text-gray-400 mt-3 text-center font-medium">Switch to <b>Satellite</b> for precise house view</p>
         </div>
 
-        <div class="bg-white rounded-[2.5rem] shadow-xl p-6 mb-10 border-b-4 border-emerald-600">
-            <h2 class="text-lg font-black mb-4 text-slate-800" id="listHeading">LIST ANY SERVICE</h2>
+        <div class="bg-white rounded-[3rem] shadow-2xl p-8 mb-10 border-b-[10px] border-emerald-900">
+            <h2 class="text-2xl font-black mb-6 text-slate-800" id="listHeading">LIST ANY SERVICE</h2>
             
-            <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-6">
-                <button id="p1" onclick="setPhase(1)" class="flex-1 py-2 rounded-lg text-xs font-bold transition">Phase 1</button>
-                <button id="p2" onclick="setPhase(2)" class="flex-1 py-2 rounded-lg text-xs font-bold transition ml-1">Phase 2</button>
+            <div class="flex bg-slate-100 dark:bg-slate-800 p-2 rounded-[1.5rem] mb-8">
+                <button id="p1" onclick="setPhase(1)" class="flex-1 py-3 rounded-xl text-xs font-black btn-phase">Phase 1</button>
+                <button id="p2" onclick="setPhase(2)" class="flex-1 py-3 rounded-xl text-xs font-black btn-phase ml-2">Phase 2</button>
             </div>
             
             <textarea id="orderBox" rows="4" 
-                class="w-full p-4 rounded-2xl mb-6 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner" 
-                placeholder="Mention items, plumber, or car rent details..."></textarea>
+                class="w-full p-6 rounded-[2rem] mb-8 font-semibold text-sm focus:ring-4 focus:ring-emerald-500/20 shadow-inner border-none bg-slate-50 transition-all placeholder:text-slate-300" 
+                placeholder="Mention groceries, plumber details, or car rent requirements..."></textarea>
             
-            <button onclick="sendOrder()" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-lg flex items-center justify-center active:scale-95 transition">
-                <i class="fab fa-whatsapp mr-3 text-3xl"></i> <span id="btnLabel">SEND REQUEST</span>
+            <button onclick="sendOrder()" class="w-full bg-emerald-600 text-white font-black py-6 rounded-[2.5rem] shadow-[0_20px_40px_rgba(5,150,105,0.4)] flex items-center justify-center hover:bg-emerald-700 transition active:scale-95">
+                <i class="fab fa-whatsapp mr-4 text-4xl"></i> <span class="text-lg" id="btnLabel">SEND REQUEST</span>
             </button>
         </div>
     </main>
@@ -125,22 +146,24 @@
 
         function initApp() {
             setTimeout(() => {
-                document.getElementById('splash').style.opacity = '0';
-                setTimeout(() => document.getElementById('splash').style.display = 'none', 800);
-            }, 2500);
+                const splash = document.getElementById('splash');
+                splash.style.opacity = '0';
+                setTimeout(() => splash.style.display = 'none', 1000);
+            }, 3500); // 3.5 Seconds for better impact
             initMap();
         }
 
         function toggleTheme() {
             isDark = !isDark;
             document.body.classList.toggle('dark');
-            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun text-lg' : 'fas fa-moon text-lg';
         }
 
         function toggleLang() {
             lang = lang === 'en' ? 'ur' : 'en';
             const isUr = lang === 'ur';
             document.getElementById('mainTitle').innerText = isUr ? "پی او آر ڈیلیوری" : "POR Delivery";
+            document.getElementById('subAddress').innerText = isUr ? "پی ایچ اے آفیسرز ریزیڈنشیا کڑی اسلام آباد" : "PHA OFFICERS RESIDENTIA KURI ISLAMABAD";
             document.getElementById('listHeading').innerText = isUr ? "سروس کی لسٹ بنائیں" : "LIST ANY SERVICE";
             document.getElementById('btnLabel').innerText = isUr ? "آرڈر بھیجیں" : "SEND REQUEST";
             document.getElementById('langBtn').innerText = isUr ? "ENGLISH" : "URDU";
@@ -148,16 +171,20 @@
         }
 
         function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('active') ? 'block' : 'none';
+            const side = document.getElementById('sidebar');
+            const over = document.getElementById('overlay');
+            side.classList.toggle('active');
+            over.style.display = side.classList.contains('active') ? 'block' : 'none';
         }
 
         function initMap() {
             const street = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
             const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+            
             map = L.map('map', { zoomControl: false, layers: [street] }).setView(base, 15);
-            L.control.layers({ "Map": street, "Satellite": sat }).addTo(map);
-            L.marker(base).addTo(map).bindPopup("POR Base").openPopup();
+            L.control.layers({ "Standard": street, "Satellite": sat }, null, { position: 'topright' }).addTo(map);
+            
+            L.marker(base).addTo(map).bindPopup("<b>POR Delivery Base</b>").openPopup();
             requestGPS();
         }
 
@@ -166,25 +193,38 @@
                 navigator.geolocation.watchPosition(p => {
                     userCoords = [p.coords.latitude, p.coords.longitude];
                     if (userMarker) map.removeLayer(userMarker);
-                    userMarker = L.circleMarker(userCoords, { color: '#059669', radius: 8, fillOpacity: 1 }).addTo(map);
+                    userMarker = L.circleMarker(userCoords, { color: '#059669', radius: 9, fillOpacity: 1, weight: 3 }).addTo(map);
                     dist = (map.distance(base, userCoords) / 1000).toFixed(2);
-                    document.getElementById('distBadge').innerText = dist + " KM AWAY";
-                });
+                    document.getElementById('distBadge').innerText = dist + " KM FROM BASE";
+                    
+                    const bounds = L.latLngBounds([base, userCoords]);
+                    map.fitBounds(bounds, { padding: [70, 70] });
+                }, null, { enableHighAccuracy: true });
             }
         }
 
         function setPhase(p) {
             phase = p;
-            document.getElementById('p1').className = "flex-1 py-2 rounded-lg text-xs font-bold text-gray-400";
-            document.getElementById('p2').className = "flex-1 py-2 rounded-lg text-xs font-bold text-gray-400 ml-1";
-            document.getElementById('p'+p).className = "flex-1 py-2 rounded-lg text-xs font-black bg-emerald-600 text-white shadow-md";
+            document.getElementById('p1').className = "flex-1 py-3 rounded-xl text-xs font-black btn-phase text-slate-400";
+            document.getElementById('p2').className = "flex-1 py-3 rounded-xl text-xs font-black btn-phase ml-2 text-slate-400";
+            document.getElementById('p'+p).className = "flex-1 py-3 rounded-xl text-xs font-black btn-phase bg-emerald-600 text-white shadow-lg";
         }
 
         function sendOrder() {
             const list = document.getElementById('orderBox').value;
-            if(!list || phase === 0) return alert("Select Phase & List Services!");
-            const loc = userCoords ? `https://www.google.com/maps?q=${userCoords[0]},${userCoords[1]}` : "Not Shared";
-            const msg = encodeURIComponent(`📦 *POR SERVICE REQUEST*\n🏠 Residentia: Phase ${phase}\n📏 Dist: ${dist} KM\n📝 List: ${list}\n📍 Map: ${loc}`);
+            if(!list || phase === 0) return alert("Please select Phase and list your requirements!");
+            const loc = userCoords ? `https://www.google.com/maps?q=${userCoords[0]},${userCoords[1]}` : "Location not shared";
+            
+            const msg = encodeURIComponent(
+                `📋 *NEW POR SERVICE REQUEST*\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `🏠 *Residentia:* Phase ${phase}\n` +
+                `📏 *Distance:* ${dist} KM\n` +
+                `🛠️ *Service List:* \n${list}\n\n` +
+                `📍 *Maps:* ${loc}\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `_PHA Officers Residentia Kuri Islamabad_`
+            );
             window.open(`https://wa.me/923325047836?text=${msg}`, '_blank');
         }
     </script>
