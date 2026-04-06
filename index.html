@@ -78,8 +78,8 @@
             <div class="service-tag"><i class="fas fa-bolt mr-3 text-emerald-600"></i> Electrician</div>
             <div class="service-tag"><i class="fas fa-paint-roller mr-3 text-emerald-600"></i> Painter</div>
             <div class="service-tag"><i class="fas fa-car mr-3 text-emerald-600"></i> Rent a Car</div>
-            <div class="p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl mt-4">
-                <p class="text-xs font-bold text-emerald-800 dark:text-emerald-400">Helpline</p>
+            <div class="p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl mt-4 border border-emerald-100">
+                <p class="text-xs font-bold text-emerald-800 dark:text-emerald-400">EasyPaisa / Help</p>
                 <a href="tel:03325047836" class="text-lg font-black text-emerald-700 dark:text-white">03325047836</a>
             </div>
         </div>
@@ -103,7 +103,6 @@
             <h1 class="text-5xl font-black italic tracking-tighter" id="mainTitle">POR Delivery</h1>
             <p class="text-[13px] font-bold text-emerald-400 tracking-[0.2em] mt-3 uppercase leading-relaxed" id="subAddress">PHA OFFICERS RESIDENTIA KURI ISLAMABAD</p>
         </div>
-        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
     </header>
 
     <main class="max-w-md mx-auto px-6 -mt-36 relative z-20 pb-10">
@@ -145,7 +144,6 @@
                 setTimeout(() => splash.style.display = 'none', 1000);
             }, 3000);
             initMap();
-            // Reset phase button visibility on load
             setPhase(0);
         }
 
@@ -197,11 +195,8 @@
             phase = p;
             const b1 = document.getElementById('p1');
             const b2 = document.getElementById('p2');
-            
-            // Reset both
             b1.className = "flex-1 py-3 rounded-xl text-xs font-black btn-phase bg-white text-slate-400";
             b2.className = "flex-1 py-3 rounded-xl text-xs font-black btn-phase ml-1 bg-white text-slate-400";
-            
             if(p === 1) b1.className = "flex-1 py-3 rounded-xl text-xs font-black btn-phase bg-emerald-600 text-white shadow-lg";
             if(p === 2) b2.className = "flex-1 py-3 rounded-xl text-xs font-black btn-phase ml-1 bg-emerald-600 text-white shadow-lg";
         }
@@ -210,7 +205,21 @@
             const list = document.getElementById('orderBox').value;
             if(!list || phase === 0) return alert("Please select Phase and list your requirements!");
             const loc = userCoords ? `https://www.google.com/maps?q=${userCoords[0]},${userCoords[1]}` : "Location not shared";
-            const msg = encodeURIComponent(`📋 *POR REQUEST*\n━━━━━━━━━━━━━━━\n🏠 *Residentia:* Phase ${phase}\n📏 *Distance:* ${dist} KM\n🛠️ *List:* ${list}\n📍 *Maps:* ${loc}`);
+            
+            // WHATSAPP MESSAGE (WITH EASYPAISA FIXED)
+            const msg = encodeURIComponent(
+                `📋 *NEW POR SERVICE REQUEST*\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `🏠 *Residentia:* Phase ${phase}\n` +
+                `📏 *Distance:* ${dist} KM\n` +
+                `🛠️ *Service List:* \n${list}\n\n` +
+                `📍 *Maps:* ${loc}\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `💳 *EasyPaisa:* 03325047836\n` +
+                `👤 *Name:* Saqib Zaheer\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `_PHA Officers Residentia Kuri Islamabad_`
+            );
             window.open(`https://wa.me/923325047836?text=${msg}`, '_blank');
         }
     </script>
