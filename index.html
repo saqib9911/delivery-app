@@ -11,249 +11,181 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&family=Noto+Nastaliq+Urdu&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;900&family=Noto+Nastaliq+Urdu&display=swap');
         
-        :root { --emerald-dark: #064e3b; --emerald-light: #10b981; }
-        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; overflow-x: hidden; touch-action: manipulation; }
-        .urdu { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.5; }
+        :root { --primary: #059669; }
+        body { font-family: 'Outfit', sans-serif; transition: 0.3s; }
+        .urdu { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2.2; }
+        
+        /* Dark Mode Styles */
+        body.dark { background-color: #0f172a; color: white; }
+        .dark .bg-white { background-color: #1e293b; color: white; }
+        .dark .text-slate-800 { color: #f1f5f9; }
+        .dark textarea { background-color: #334155; color: white; border: 1px solid #475569; }
+        .dark #sidebar { background-color: #1e293b; color: white; }
+        .dark .service-pill { background-color: #334155; color: #cbd5e1; border-color: #475569; }
 
-        /* 1. Splash Screen Animation */
-        #splash-screen {
+        /* Splash */
+        #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, var(--emerald-dark) 0%, #059669 100%);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999; transition: opacity 0.8s ease-out;
+            background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; transition: 0.8s;
         }
-        .splash-logo { animation: zoomIn 1.2s ease-out forwards; opacity: 0; }
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
-        /* 2. Vortex Math Watch Style */
-        .watch-face { font-family: monospace; font-weight: bold; letter-spacing: 2px; color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.3); }
-
-        /* 3. Hamburger Sidebar */
+        /* Sidebar */
         #sidebar {
             position: fixed; top: 0; right: -100%; width: 300px; height: 100%;
-            background: white; box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-            z-index: 2000; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 1.5rem; overflow-y: auto;
+            background: white; z-index: 2000; transition: 0.5s; padding: 25px; box-shadow: -10px 0 30px rgba(0,0,0,0.2);
         }
         #sidebar.active { right: 0; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; z-index: 1500; backdrop-filter: blur(4px); }
-        
-        .service-card { background: #f1f5f9; padding: 12px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; font-size: 13px; font-weight: 600; }
-        .service-card i { color: var(--emerald-light); margin-right: 12px; width: 20px; text-align: center; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1500; backdrop-filter: blur(4px); }
 
-        #map { height: 300px; width: 100%; border-radius: 25px; border: 3px solid var(--emerald-light); z-index: 1; }
+        #map { height: 320px; width: 100%; border-radius: 25px; border: 3px solid var(--primary); z-index: 1; }
+        .service-pill { background: #f1f5f9; padding: 10px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; font-size: 13px; }
     </style>
 </head>
-<body onload="initApp()">
+<body class="bg-slate-50" onload="initApp()">
 
-    <div id="splash-screen">
-        <div class="splash-logo text-center px-6">
-            <h1 class="text-7xl font-black text-white italic tracking-tighter">POR</h1>
-            <p class="text-xl text-emerald-100 font-bold tracking-[0.4em] mb-4">DELIVERY</p>
-            <div class="h-1.5 w-24 bg-yellow-400 mx-auto rounded-full mb-6"></div>
-            <p class="text-[11px] text-white/80 uppercase tracking-widest leading-relaxed">PHA Officers Residentia<br>Kuri Road, Islamabad</p>
+    <div id="splash">
+        <div class="text-center text-white scale-110 transition">
+            <h1 class="text-7xl font-black italic">POR</h1>
+            <p class="tracking-[0.4em] font-bold text-emerald-300">RESIDENTIA</p>
         </div>
     </div>
 
     <div id="sidebar">
-        <div class="flex justify-between items-center mb-8">
-            <h3 class="font-black text-2xl italic text-emerald-900">POR HUB</h3>
-            <button onclick="toggleMenu()" class="text-gray-400"><i class="fas fa-times text-2xl"></i></button>
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-black text-xl italic text-emerald-600">POR HUB</h3>
+            <button onclick="toggleMenu()"><i class="fas fa-times text-xl"></i></button>
         </div>
-        
-        <nav class="space-y-8">
-            <section>
-                <h4 class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">Community Services</h4>
-                <div class="service-card"><i class="fas fa-faucet"></i> Plumbers</div>
-                <div class="service-card"><i class="fas fa-bolt"></i> Electricians</div>
-                <div class="service-card"><i class="fas fa-paint-roller"></i> Painters</div>
-                <div class="service-card"><i class="fas fa-car"></i> Rent a Car</div>
-                <div class="service-card"><i class="fas fa-moon"></i> Moon/Astro Tracking</div>
-            </section>
-
-            <section class="bg-gray-50 p-4 rounded-2xl">
-                <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">Delivery Charges</h4>
-                <div class="text-xs space-y-1 font-bold text-gray-700">
-                    <p class="flex justify-between"><span>P1 / P2 Base:</span> <span>Rs. 100</span></p>
-                    <p class="flex justify-between"><span>Heavy/Urgent:</span> <span>Rs. 150+</span></p>
-                </div>
-            </section>
-
-            <section>
-                <a href="tel:03325047836" class="w-full bg-emerald-900 text-white p-4 rounded-2xl flex items-center justify-center font-bold">
-                    <i class="fas fa-phone-alt mr-3"></i> Call Helpline
-                </a>
-            </section>
-        </nav>
+        <section class="space-y-4">
+            <h4 class="text-[10px] font-black uppercase tracking-widest text-gray-400">Services List</h4>
+            <div class="service-pill"><i class="fas fa-shopping-cart mr-3"></i> Groceries</div>
+            <div class="service-pill"><i class="fas fa-faucet mr-3"></i> Plumber</div>
+            <div class="service-pill"><i class="fas fa-bolt mr-3"></i> Electrician</div>
+            <div class="service-pill"><i class="fas fa-car mr-3"></i> Rent a Car</div>
+            <hr class="opacity-10">
+            <div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl">
+                <p class="text-xs font-bold">Helpline</p>
+                <a href="tel:03325047836" class="text-emerald-600 font-black">03325047836</a>
+            </div>
+        </section>
     </div>
     <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
-    <nav class="fixed top-0 w-full p-6 flex justify-between items-center z-[1000]">
-        <div id="vortex-clock" class="watch-face bg-black/20 backdrop-blur-md px-4 py-1 rounded-full text-xs">00:00:00</div>
-        <button onclick="toggleMenu()" class="bg-emerald-900/80 backdrop-blur-md text-white w-12 h-12 rounded-2xl shadow-lg flex items-center justify-center">
-            <i class="fas fa-bars-staggered"></i>
+    <nav class="fixed top-0 w-full p-5 flex justify-between items-center z-[1000]">
+        <div class="flex gap-2">
+            <button onclick="toggleTheme()" class="bg-black/20 backdrop-blur-md w-10 h-10 rounded-xl text-white flex items-center justify-center">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            <button onclick="toggleLang()" class="bg-black/20 backdrop-blur-md px-3 rounded-xl text-white text-[10px] font-bold" id="langBtn">URDU</button>
+        </div>
+        <button onclick="toggleMenu()" class="bg-emerald-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+            <i class="fas fa-bars"></i>
         </button>
     </nav>
 
-    <header class="bg-emerald-950 text-white pt-28 pb-36 px-8 rounded-b-[4rem] text-center shadow-2xl relative overflow-hidden">
-        <div class="relative z-10">
-            <h1 id="mainTitle" class="text-4xl font-black italic">POR Delivery</h1>
-            <p id="subTitle" class="text-[10px] opacity-60 mt-2 tracking-[0.4em] font-bold uppercase">PHA Officers Residentia</p>
-        </div>
-        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-800 rounded-full blur-3xl opacity-50"></div>
+    <header class="bg-emerald-950 text-white pt-24 pb-36 px-8 rounded-b-[3.5rem] text-center shadow-2xl">
+        <h1 class="text-4xl font-black italic" id="mainTitle">POR Delivery</h1>
+        <p class="text-[9px] opacity-60 tracking-[0.3em] font-bold mt-2 uppercase">PHA Officers Residentia</p>
     </header>
 
     <main class="max-w-md mx-auto px-6 -mt-24 relative z-20">
         
-        <div class="bg-white rounded-[2.5rem] p-5 shadow-2xl mb-6">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <span id="distBadge" class="bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
-                    Detecting GPS...
-                </span>
-                <div class="flex gap-2">
-                    <button onclick="requestGPS()" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="fas fa-location-arrow text-xs"></i></button>
-                    <button onclick="toggleLang()" id="langBtn" class="px-3 py-1 rounded-full border border-gray-200 text-[10px] font-bold">URDU</button>
-                </div>
+        <div class="bg-white rounded-[2.5rem] p-4 shadow-xl mb-6 transition">
+            <div class="flex justify-between items-center mb-3 px-2">
+                <span id="distBadge" class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">GPS Ready</span>
+                <button onclick="requestGPS()" class="text-emerald-500"><i class="fas fa-location-crosshairs"></i></button>
             </div>
-            
             <div id="map"></div>
-            <p id="mapNote" class="text-[9px] text-gray-400 mt-3 text-center">Distance is calculated from Kuri Road Base to your house.</p>
         </div>
 
-        <div class="bg-white rounded-[2.5rem] shadow-2xl p-6 mb-10 border-b-[6px] border-emerald-800">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="orderHeading" class="text-xl font-black">Create Order</h2>
-                <div class="flex bg-gray-100 p-1.5 rounded-2xl">
-                    <button id="btnP1" onclick="setPhase(1)" class="px-5 py-2 rounded-xl text-xs font-black transition-all">P-1</button>
-                    <button id="btnP2" onclick="setPhase(2)" class="px-5 py-2 rounded-xl text-xs font-black transition-all ml-1">P-2</button>
-                </div>
+        <div class="bg-white rounded-[2.5rem] shadow-xl p-6 mb-10 border-b-4 border-emerald-600">
+            <h2 class="text-lg font-black mb-4 text-slate-800" id="listHeading">LIST ANY SERVICE</h2>
+            
+            <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl mb-6">
+                <button id="p1" onclick="setPhase(1)" class="flex-1 py-2 rounded-lg text-xs font-bold transition">Phase 1</button>
+                <button id="p2" onclick="setPhase(2)" class="flex-1 py-2 rounded-lg text-xs font-bold transition ml-1">Phase 2</button>
             </div>
             
             <textarea id="orderBox" rows="4" 
-                class="w-full p-5 bg-gray-50 border-none rounded-[2rem] focus:ring-2 focus:ring-emerald-500 mb-6 font-medium text-sm placeholder:text-gray-300 shadow-inner" 
-                placeholder="Write items list here..."></textarea>
+                class="w-full p-4 rounded-2xl mb-6 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner" 
+                placeholder="Mention items, plumber, or car rent details..."></textarea>
             
-            <button onclick="confirmOrder()" class="w-full bg-emerald-600 text-white font-black py-5 rounded-[2rem] shadow-[0_15px_35px_rgba(5,150,105,0.4)] flex items-center justify-center hover:bg-emerald-700 transition active:scale-95">
-                <i class="fab fa-whatsapp mr-4 text-3xl"></i> <span id="btnText">CONFIRM ORDER</span>
+            <button onclick="sendOrder()" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-lg flex items-center justify-center active:scale-95 transition">
+                <i class="fab fa-whatsapp mr-3 text-3xl"></i> <span id="btnLabel">SEND REQUEST</span>
             </button>
-        </div>
-
-        <div class="bg-slate-900 rounded-[2.5rem] p-6 text-white shadow-2xl flex justify-between items-center mb-10">
-            <div>
-                <p class="text-emerald-400 font-bold text-[10px] uppercase tracking-widest">Payment Method</p>
-                <h3 class="text-2xl font-mono font-bold tracking-tighter mt-1">03325047836</h3>
-                <p class="text-[10px] text-gray-500 uppercase">EasyPaisa: Saqib Zaheer</p>
-            </div>
-            <i class="fas fa-shield-check text-3xl text-emerald-500/20"></i>
         </div>
     </main>
 
     <script>
-        let map, userMarker, userCoords = null, selectedPhase = 0, finalDist = "0", currentLang = 'en';
-        const saqibBase = [33.6550, 73.1650];
+        let map, userMarker, userCoords = null, phase = 0, dist = "0", isDark = false, lang = 'en';
+        const base = [33.6550, 73.1650];
 
         function initApp() {
-            // Clock Animation
-            setInterval(updateClock, 1000);
-            
-            // Splash Timer
             setTimeout(() => {
-                const splash = document.getElementById('splash-screen');
-                splash.style.opacity = '0';
-                setTimeout(() => splash.style.display = 'none', 800);
-            }, 2800);
-
+                document.getElementById('splash').style.opacity = '0';
+                setTimeout(() => document.getElementById('splash').style.display = 'none', 800);
+            }, 2500);
             initMap();
         }
 
-        function updateClock() {
-            const now = new Date();
-            const time = now.getHours().toString().padStart(2, '0') + ":" + 
-                         now.getMinutes().toString().padStart(2, '0') + ":" + 
-                         now.getSeconds().toString().padStart(2, '0');
-            document.getElementById('vortex-clock').innerText = time;
+        function toggleTheme() {
+            isDark = !isDark;
+            document.body.classList.toggle('dark');
+            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function toggleLang() {
+            lang = lang === 'en' ? 'ur' : 'en';
+            const isUr = lang === 'ur';
+            document.getElementById('mainTitle').innerText = isUr ? "پی او آر ڈیلیوری" : "POR Delivery";
+            document.getElementById('listHeading').innerText = isUr ? "سروس کی لسٹ بنائیں" : "LIST ANY SERVICE";
+            document.getElementById('btnLabel').innerText = isUr ? "آرڈر بھیجیں" : "SEND REQUEST";
+            document.getElementById('langBtn').innerText = isUr ? "ENGLISH" : "URDU";
+            document.body.classList.toggle('urdu', isUr);
         }
 
         function toggleMenu() {
-            const side = document.getElementById('sidebar');
-            const over = document.getElementById('overlay');
-            side.classList.toggle('active');
-            over.style.display = side.classList.contains('active') ? 'block' : 'none';
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').style.display = document.getElementById('sidebar').classList.contains('active') ? 'block' : 'none';
         }
 
         function initMap() {
-            map = L.map('map', { zoomControl: false }).setView(saqibBase, 15);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19
-            }).addTo(map);
-
-            L.marker(saqibBase).addTo(map).bindPopup("<b>POR Delivery Base</b>").openPopup();
+            const street = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
+            const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+            map = L.map('map', { zoomControl: false, layers: [street] }).setView(base, 15);
+            L.control.layers({ "Map": street, "Satellite": sat }).addTo(map);
+            L.marker(base).addTo(map).bindPopup("POR Base").openPopup();
             requestGPS();
         }
 
         function requestGPS() {
             if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(updatePosition, (err) => {
-                    document.getElementById('distBadge').innerText = "GPS REQUIRED";
-                }, { enableHighAccuracy: true });
+                navigator.geolocation.watchPosition(p => {
+                    userCoords = [p.coords.latitude, p.coords.longitude];
+                    if (userMarker) map.removeLayer(userMarker);
+                    userMarker = L.circleMarker(userCoords, { color: '#059669', radius: 8, fillOpacity: 1 }).addTo(map);
+                    dist = (map.distance(base, userCoords) / 1000).toFixed(2);
+                    document.getElementById('distBadge').innerText = dist + " KM AWAY";
+                });
             }
         }
 
-        function updatePosition(pos) {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            userCoords = [lat, lng];
-
-            if (userMarker) map.removeLayer(userMarker);
-            userMarker = L.circleMarker(userCoords, {
-                color: '#10b981', fillColor: '#10b981', fillOpacity: 0.8, radius: 8
-            }).addTo(map).bindPopup("Your Location");
-
-            const d = (map.distance(saqibBase, userCoords) / 1000).toFixed(2);
-            finalDist = d;
-            document.getElementById('distBadge').innerText = d + " KM FROM BASE";
-            
-            const bounds = L.latLngBounds([saqibBase, userCoords]);
-            map.fitBounds(bounds, { padding: [50, 50] });
-        }
-
         function setPhase(p) {
-            selectedPhase = p;
-            document.getElementById('btnP1').className = "px-5 py-2 rounded-xl text-xs font-black transition-all";
-            document.getElementById('btnP2').className = "px-5 py-2 rounded-xl text-xs font-black transition-all ml-1";
-            document.getElementById('btnP'+p).className = "px-5 py-2 rounded-xl text-xs font-black bg-emerald-600 text-white shadow-lg";
+            phase = p;
+            document.getElementById('p1').className = "flex-1 py-2 rounded-lg text-xs font-bold text-gray-400";
+            document.getElementById('p2').className = "flex-1 py-2 rounded-lg text-xs font-bold text-gray-400 ml-1";
+            document.getElementById('p'+p).className = "flex-1 py-2 rounded-lg text-xs font-black bg-emerald-600 text-white shadow-md";
         }
 
-        function toggleLang() {
-            currentLang = currentLang === 'en' ? 'ur' : 'en';
-            const isUr = currentLang === 'ur';
-            document.getElementById('mainTitle').innerText = isUr ? "پی او آر ڈیلیوری" : "POR Delivery";
-            document.getElementById('orderHeading').innerText = isUr ? "آرڈر لسٹ بنائیں" : "Create Order";
-            document.getElementById('btnText').innerText = isUr ? "آرڈر بھیجیں" : "CONFIRM ORDER";
-            document.getElementById('orderBox').placeholder = isUr ? "سامان کی لسٹ لکھیں..." : "Write items list here...";
-            document.getElementById('langBtn').innerText = isUr ? "ENGLISH" : "URDU";
-            document.body.classList.toggle('urdu', isUr);
-        }
-
-        function confirmOrder() {
+        function sendOrder() {
             const list = document.getElementById('orderBox').value;
-            if(!list.trim() || selectedPhase === 0) return alert("Please select Phase and write items!");
-            
-            const mapLink = userCoords ? `https://www.google.com/maps?q=${userCoords[0]},${userCoords[1]}` : "Not Shared";
-            
-            const text = encodeURIComponent(
-                `📦 *NEW POR ORDER*\n` +
-                `━━━━━━━━━━━━━━━\n` +
-                `🏠 *Phase:* ${selectedPhase}\n` +
-                `📏 *Distance:* ${finalDist} KM\n` +
-                `📝 *Items:* \n${list}\n\n` +
-                `📍 *Live Location:* ${mapLink}\n` +
-                `━━━━━━━━━━━━━━━\n` +
-                `💳 *EasyPaisa:* 03325047836`
-            );
-            window.open(`https://wa.me/923325047836?text=${text}`, '_blank');
+            if(!list || phase === 0) return alert("Select Phase & List Services!");
+            const loc = userCoords ? `https://www.google.com/maps?q=${userCoords[0]},${userCoords[1]}` : "Not Shared";
+            const msg = encodeURIComponent(`📦 *POR SERVICE REQUEST*\n🏠 Residentia: Phase ${phase}\n📏 Dist: ${dist} KM\n📝 List: ${list}\n📍 Map: ${loc}`);
+            window.open(`https://wa.me/923325047836?text=${msg}`, '_blank');
         }
     </script>
 </body>
